@@ -34,11 +34,6 @@ public class UserServiceImpl implements UserService {
         return dao.getAllUsers();
     }
 
-//    public UserDaoJDBCImpl getJDBCImpl() {
-//        this.dao = new UserDaoJDBCImpl();
-//        return (UserDaoJDBCImpl) dao;
-//    }
-
     public void cleanUsersTable() {
         dao.cleanUsersTable();
     }

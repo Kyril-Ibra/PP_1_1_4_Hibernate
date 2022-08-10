@@ -5,10 +5,6 @@ import jm.task.core.jdbc.util.Util;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import javax.persistence.Query;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
@@ -64,25 +60,32 @@ public class UserDaoHibernateImpl implements UserDao {
 
     @Override
     public void removeUserById(long id) {
+        Transaction txn = null;
         try (Session session = Util.HibernateUtil.getSessionFactory().openSession()) {
+            txn = session.beginTransaction();
             User user1 = session.get(User.class, id);
             session.delete(user1);
         } catch (HibernateException e) {
             e.printStackTrace();
+            if (txn != null) {
+                txn.rollback();
+            }
         }
     }
 
     @Override
     public List<User> getAllUsers() {
-        Session session = Util.HibernateUtil.getSessionFactory().openSession();
-        CriteriaBuilder cb = session.getCriteriaBuilder();
-        CriteriaQuery<User> cq = cb.createQuery(User.class);
-        Root<User> root = cq.from(User.class);
-        cq.select(root);
-        Query query = session.createQuery(cq);
-        List<User> userList = query.getResultList();
-        session.close();
-        return userList;
+        Transaction txn = null;
+        List<User> users = null;
+        try (Session session = Util.HibernateUtil.getSessionFactory().openSession()) {
+            txn = session.beginTransaction();
+            users = session.createQuery("from User").list();
+            txn.commit();
+        } catch (Exception e) {
+            if (txn != null)
+                txn.rollback();
+        }
+        return users;
     }
 
     @Override
